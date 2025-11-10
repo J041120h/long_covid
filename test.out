@@ -1,0 +1,35 @@
+[INFO] Loading AnnData from: /dcs07/hongkai/data/harry/result/long_covid/QC/long_covid_qc_harmony_umap.h5ad
+[INFO] Shape: 260328 cells × 2000 genes
+[INFO] Using existing Leiden clustering in adata.obs['leiden'].
+[INFO] Using existing UMAP embedding in adata.obsm['X_umap'].
+[INFO] Finding marker genes and generating heatmaps before annotation.
+[INFO] Finding marker genes for clusters in 'leiden'
+[INFO] Plotting combined marker heatmap for all clusters
+[INFO] Plotting marker heatmap for cluster 0
+[INFO] Plotting marker heatmap for cluster 1
+[INFO] Plotting marker heatmap for cluster 2
+[INFO] Plotting marker heatmap for cluster 3
+[INFO] Plotting marker heatmap for cluster 4
+[INFO] Plotting marker heatmap for cluster 5
+[INFO] Plotting marker heatmap for cluster 6
+[INFO] Plotting marker heatmap for cluster 7
+[INFO] Plotting marker heatmap for cluster 8
+[INFO] Plotting marker heatmap for cluster 9
+[INFO] Plotting marker heatmap for cluster 10
+[INFO] Plotting marker heatmap for cluster 11
+[INFO] Plotting marker heatmap for cluster 12
+[INFO] Plotting marker heatmap for cluster 13
+[INFO] Plotting marker heatmap for cluster 14
+[INFO] Plotting marker heatmap for cluster 15
+[INFO] Plotting marker heatmap for cluster 16
+[INFO] Plotting marker heatmap for cluster 17
+[INFO] Plotting marker heatmap for cluster 18
+[INFO] Plotting marker heatmap for cluster 19
+[INFO] Using adata.layers['counts'] as input for CellTypist (raw counts).
+[INFO] Normalizing and log-transforming counts for CellTypist (1e4 + log1p).
+[INFO] No NaN/Inf detected in adata_ct.X before CellTypist.
+[INFO] Loading custom CellTypist model: /users/hjiang/GenoDistance/long_covid/PaediatricAdult_COVID19_PBMC.pkl
+[INFO] Running CellTypist with model: /users/hjiang/GenoDistance/long_covid/PaediatricAdult_COVID19_PBMC.pkl
+[INFO] Stored Leiden → cell_type mapping in adata.uns['leiden_to_cell_type'].
+[INFO] Writing updated AnnData back to: /dcs07/hongkai/data/harry/result/long_covid/QC/long_covid_qc_harmony_umap.h5ad
+[INFO] Annotation and marker analysis complete.
