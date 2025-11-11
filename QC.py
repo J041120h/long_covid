@@ -274,30 +274,39 @@ def long_covid_qc_and_dr(
         print("Storing raw counts in adata.layers['counts']")
         adata.layers["counts"] = adata.X.copy()
 
-    # --- HVG selection (Seurat v3, 2000 genes, on raw counts) ---
-    print("=== HVG selection (Seurat v3, n_hvgs={}) ===".format(n_hvgs))
+
+    # === HVG selection on raw counts, but do NOT subset genes ===
+    print(f"=== HVG selection (Seurat v3, n_hvgs={n_hvgs}) ===")
     sc.pp.highly_variable_genes(
         adata,
         flavor="seurat_v3",
         n_top_genes=n_hvgs,
-        layer="counts",  # use raw counts to avoid non-integer warning
-        subset=True,
+        layer="counts",   # use raw counts
+        subset=False,     # ❗ do NOT drop non-HVG genes
         inplace=True,
     )
-    print(f"After HVG selection: {adata.n_obs} cells × {adata.n_vars} HVGs")
+    print("Number of HVGs:", adata.var["highly_variable"].sum())
 
-    # --- Normalization & log1p ---
-    print("=== Normalization (10k counts/cell) and log1p ===")
+    # === Take counts from the layer and run normalization on ALL genes ===
+    # (this is literally “take counts out of the layer and normalize”)
+    adata.X = adata.layers["counts"].copy()
+
+    print("=== Normalization (10k counts/cell) and log1p on ALL genes ===")
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
 
-    # Keep a copy of normalized, log1p data as .raw for plotting later
-    adata.raw = adata
+    # Save the normalized full-gene matrix for later inspection/plots
+    adata.raw = adata.copy()
 
-    # --- PCA ---
-    print(f"=== PCA (n_pcs={n_pcs}) ===")
+    # === PCA using only HVGs (integration step) ===
+    print(f"=== PCA (n_pcs={n_pcs}) on HVGs only ===")
     sc.pp.scale(adata, max_value=10)
-    sc.tl.pca(adata, n_comps=n_pcs, svd_solver="arpack")
+    sc.tl.pca(
+        adata,
+        n_comps=n_pcs,
+        svd_solver="arpack",
+        use_highly_variable=True,  # only HVGs used for PCA
+    )
     print("Stored PCA in adata.obsm['X_pca']")
 
     # --- Harmony integration on sample_column ---
