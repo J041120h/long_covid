@@ -11,10 +11,18 @@ import celltypist
 from celltypist import models
 import matplotlib
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Non-interactive backend for HPC
 matplotlib.use("Agg")
 
+import os
+from typing import Optional, Tuple
+
+import numpy as np
+import pandas as pd
+import scanpy as sc
+import anndata as ad
 
 def find_markers_and_heatmaps(
     adata: ad.AnnData,
@@ -23,9 +31,10 @@ def find_markers_and_heatmaps(
     n_top: int = 10,
 ) -> None:
     """
-    Find marker genes per cluster using rank_genes_groups and generate heatmaps:
+    Find marker genes per cluster using rank_genes_groups and generate:
       - One combined heatmap for all clusters
-      - One heatmap per cluster.
+      - One combined dot plot for all clusters
+      - One heatmap per cluster
     """
     marker_dir = os.path.join(output_dir, "markers")
     os.makedirs(marker_dir, exist_ok=True)
@@ -54,6 +63,7 @@ def find_markers_and_heatmaps(
         genes_g = list(rank["names"][g][:n_top])
         top_genes_per_cluster[g] = genes_g
         top_genes_all.extend(genes_g)
+
     # Unique list while preserving order
     top_genes_all = list(dict.fromkeys(top_genes_all))
 
@@ -73,12 +83,30 @@ def find_markers_and_heatmaps(
     )
     plt.close()
 
+    # --- Combined dot plot across all clusters (NEW) ---
+    print("[INFO] Plotting combined marker dot plot for all clusters")
+    sc.pl.dotplot(
+        adata,
+        var_names=top_genes_all,
+        groupby=cluster_key,
+        show=False,
+        standard_scale="var",
+    )
+    plt.savefig(
+        os.path.join(marker_dir, f"markers_dotplot_{cluster_key}_all_clusters.png"),
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
     # --- Individual heatmaps per cluster ---
     for g in groups:
         genes_g = top_genes_per_cluster[g]
         print(f"[INFO] Plotting marker heatmap for cluster {g}")
+
         # Subset to this cluster only
         adata_g = adata[adata.obs[cluster_key] == g].copy()
+
         sc.pl.heatmap(
             adata_g,
             var_names=genes_g,
@@ -92,7 +120,6 @@ def find_markers_and_heatmaps(
             bbox_inches="tight",
         )
         plt.close()
-
 
 def _build_celltypist_input_adata(adata: ad.AnnData) -> ad.AnnData:
     """
@@ -136,16 +163,12 @@ def annotate_cell_types_with_celltypist(
     Annotate cell types using CellTypist and add:
         - adata.obs['cell_type']
         - adata.obs['celltypist_conf_score']
-
-    Based on the official CellTypist tutorial:
-      - The input expression matrix for CellTypist should be
-        log1p-normalised to 10,000 counts per cell.
-
-    Here we:
-      1) Build a CellTypist input AnnData from layers['counts'] (preferred).
-      2) Normalize to 1e4 and log1p if using counts.
-      3) If not counts, heuristically avoid double-log-transform.
-      4) Clean NaN/Inf before calling the underlying sklearn LogisticRegression.
+    
+    Creates multiple UMAP visualizations including:
+        - UMAP colored by cell_type (per-cell)
+        - Side-by-side Leiden vs cell_type
+        - Leiden clusters with majority cell-type category
+        - UMAP with one label per Leiden cluster showing majority cell type
     """
     if (model_name is None and custom_model_path is None) or (
         model_name is not None and custom_model_path is not None
@@ -161,12 +184,10 @@ def annotate_cell_types_with_celltypist(
     # --- Normalize/log for CellTypist ---
     using_counts = "counts" in adata.layers
     if using_counts:
-        # This matches the tutorial: normalize_total(target_sum=1e4) then log1p
         print("[INFO] Normalizing and log-transforming counts for CellTypist (1e4 + log1p).")
         sc.pp.normalize_total(adata_ct, target_sum=1e4)
         sc.pp.log1p(adata_ct)
     else:
-        # For non-counts input, avoid double log-transform on already log1p data
         print("[INFO] Input for CellTypist is not raw counts; checking if extra normalize/log is needed.")
         X_sample = adata_ct.X
         if not isinstance(X_sample, np.ndarray):
@@ -174,7 +195,6 @@ def annotate_cell_types_with_celltypist(
         else:
             X_sample = X_sample[:100]
 
-        # Very simple heuristic: values > 20 are unlikely to be log1p counts
         if (X_sample > 20).sum() > 0:
             print("[INFO] Detected large values, performing normalize_total + log1p for CellTypist.")
             sc.pp.normalize_total(adata_ct, target_sum=1e4)
@@ -204,7 +224,6 @@ def annotate_cell_types_with_celltypist(
     # --- Load CellTypist model ---
     if model_name is not None:
         print(f"[INFO] Preparing CellTypist model: {model_name}")
-        # Try to download/update index; if no internet, just warn and continue
         try:
             models.download_models(force_update=False, model=[model_name])
         except Exception as e:
@@ -213,7 +232,6 @@ def annotate_cell_types_with_celltypist(
                 f"       Error: {e}\n"
                 "       Will try to load the model from local cache only."
             )
-        # Now try to load from local cache
         try:
             model = models.Model.load(model_name)
         except Exception as e:
@@ -276,10 +294,13 @@ def annotate_cell_types_with_celltypist(
         elif "X_pca" in adata.obsm:
             sc.pp.neighbors(adata, use_rep="X_pca")
         else:
+            sc.pp.normalize_total(adata, target_sum=1e4)
+            sc.pp.log1p(adata)
             sc.pp.pca(adata, svd_solver="arpack")
             sc.pp.neighbors(adata, n_pcs=20)
         sc.tl.umap(adata)
 
+    # --- Plot 1: Cell types on UMAP (per-cell) ---
     sc.pl.umap(
         adata,
         color="cell_type",
@@ -292,6 +313,124 @@ def annotate_cell_types_with_celltypist(
         bbox_inches="tight",
     )
     plt.close()
+
+    # --- Plot 2 & 3: comparing Leiden and cell types, and combined label ---
+    if "leiden" in adata.obs.columns:
+        fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+        
+        sc.pl.umap(
+            adata,
+            color="leiden",
+            title="Leiden Clusters",
+            ax=axes[0],
+            show=False,
+            legend_loc="on data",
+            legend_fontsize=8,
+        )
+        
+        sc.pl.umap(
+            adata,
+            color="cell_type",
+            title="CellTypist Cell Types",
+            ax=axes[1],
+            show=False,
+        )
+        
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(plot_dir, "celltypist_umap_leiden_vs_celltype.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close()
+        
+        # --- Plot 3: Leiden clusters with cell type labels as category ---
+        cluster_to_celltype = (
+            adata.obs.groupby("leiden")["cell_type"]
+            .agg(lambda x: x.value_counts().idxmax())
+        )
+        
+        # Map majority cell type back to each cell and ensure plain strings
+        leiden_str = adata.obs["leiden"].astype(str)
+        majority_ct_str = adata.obs["leiden"].map(cluster_to_celltype).astype(str)
+
+        # Category with "cluster: celltype" per cell
+        adata.obs["leiden_with_celltype"] = (
+            leiden_str + ": " + majority_ct_str
+        )
+        
+        sc.pl.umap(
+            adata,
+            color="leiden_with_celltype",
+            title="Leiden Clusters with Majority Cell Type (per-cell label)",
+            show=False,
+        )
+        plt.savefig(
+            os.path.join(plot_dir, "celltypist_umap_leiden_with_celltype_labels.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close()
+
+        # --- Plot 4: UMAP with one label per Leiden cluster (cluster-level annotation) ---
+        umap_coords = adata.obsm.get("X_umap", None)
+        if umap_coords is not None:
+            umap_df = pd.DataFrame(
+                umap_coords,
+                columns=["UMAP1", "UMAP2"],
+                index=adata.obs.index,
+            )
+            umap_df["leiden"] = adata.obs["leiden"].astype(str)
+            umap_df["cell_type"] = adata.obs["cell_type"].astype(str)
+
+            # Majority cell type per Leiden cluster
+            majority_celltype = (
+                umap_df.groupby("leiden")["cell_type"]
+                .agg(lambda x: x.value_counts().idxmax())
+            )
+            # Cluster "centers" on UMAP
+            centroids = umap_df.groupby("leiden")[["UMAP1", "UMAP2"]].median()
+
+            fig, ax = plt.subplots(figsize=(8, 6))
+            # Background points
+            ax.scatter(
+                umap_df["UMAP1"],
+                umap_df["UMAP2"],
+                s=1,
+                alpha=0.3,
+            )
+            # Text label per cluster at centroid
+            for cl in centroids.index:
+                x, y = centroids.loc[cl]
+                label = f"{cl}: {majority_celltype[cl]}"
+                ax.text(
+                    x,
+                    y,
+                    label,
+                    ha="center",
+                    va="center",
+                    fontsize=8,
+                    bbox=dict(
+                        boxstyle="round,pad=0.2",
+                        fc="white",
+                        alpha=0.8,
+                        ec="none",
+                    ),
+                )
+
+            ax.set_xlabel("UMAP1")
+            ax.set_ylabel("UMAP2")
+            ax.set_title("UMAP with Leiden Clusters Annotated by Majority Cell Type")
+            plt.tight_layout()
+            plt.savefig(
+                os.path.join(
+                    plot_dir,
+                    "celltypist_umap_leiden_cluster_majority_celltype_annotations.png",
+                ),
+                dpi=300,
+                bbox_inches="tight",
+            )
+            plt.close()
 
     return adata
 
@@ -323,8 +462,7 @@ def run_leiden_and_celltypist(
         elif "X_pca" in adata.obsm:
             sc.pp.neighbors(adata, use_rep="X_pca")
         else:
-            # Fallback path if no PCA/harmony present; note this acts on adata.X,
-            # which in your inspected file is already scaled, so this should rarely run.
+            # Fallback path if no PCA/harmony present
             sc.pp.normalize_total(adata, target_sum=1e4)
             sc.pp.log1p(adata)
             sc.pp.pca(adata, svd_solver="arpack")
@@ -348,7 +486,6 @@ def run_leiden_and_celltypist(
         adata=adata,
         output_dir=output_dir,
         cluster_key="leiden",
-        n_top=10,
     )
 
     # --- Run CellTypist annotation ---
