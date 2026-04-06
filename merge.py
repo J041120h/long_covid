@@ -35,13 +35,6 @@ def merge_cellranger_h5_to_h5ad(input_dir: str, output_path: str) -> None:
 
     Each .h5 file is assumed to be a 10x Genomics / Cell Ranger matrix file
     (e.g. filtered_feature_bc_matrix.h5), not an .h5ad.
-
-    Parameters
-    ----------
-    input_dir : str
-        Path to the directory containing .h5 files.
-    output_path : str
-        Path to the output .h5ad file (including filename).
     """
     input_path = Path(input_dir)
     if not input_path.is_dir():
@@ -59,12 +52,14 @@ def merge_cellranger_h5_to_h5ad(input_dir: str, output_path: str) -> None:
 
     adatas: List[ad.AnnData] = []
     sample_names: List[str] = []
+    successfully_loaded_files: List[str] = []
 
     for f in h5_files:
         sample_name = _parse_sample_name(f)  # e.g. "1--104-M1"
         sample_names.append(sample_name)
 
         print(f"\nReading Cell Ranger HDF5 file: {f}")
+
         # Use read_10x_h5 for Cell Ranger HDF5
         adata = sc.read_10x_h5(str(f))
 
@@ -75,10 +70,20 @@ def merge_cellranger_h5_to_h5ad(input_dir: str, output_path: str) -> None:
         adata.obs["sample"] = sample_name
         adata.obs["source_file"] = f.name
 
-        print(f"  Loaded shape: {adata.n_obs} cells x {adata.n_vars} features "
-              f"(sample = {sample_name})")
+        print(
+            f"  Loaded shape: {adata.n_obs} cells x {adata.n_vars} features "
+            f"(sample = {sample_name})"
+        )
 
         adatas.append(adata)
+        successfully_loaded_files.append(f.name)
+
+        # >>> NEW PRINT <<<
+        print(f"  ✔ Successfully identified and added file: {f.name}")
+
+    print("\nFiles successfully loaded and ready for merge:")
+    for fname in successfully_loaded_files:
+        print(f"  ✔ {fname}")
 
     print("\nConcatenating AnnData objects across samples...")
     merged: ad.AnnData = ad.concat(
@@ -91,24 +96,24 @@ def merge_cellranger_h5_to_h5ad(input_dir: str, output_path: str) -> None:
 
     print(f"Merged AnnData shape: {merged.n_obs} cells x {merged.n_vars} features")
 
+    print("\nSamples included in merged object:")
+    for s in sample_names:
+        print(f"  ✔ {s}")
+
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"\nWriting merged AnnData to: {output_path}")
     merged.write_h5ad(str(output_path))
-    print("Done.")
+
+    print("\n✔ Merge completed successfully.")
+    print(f"✔ Total files merged: {len(successfully_loaded_files)}")
 
 
 if __name__ == "__main__":
-    # >>> User-modifiable section <<<
 
-    # Directory with files like:
-    #   1--104-M1_sample_filtered_feature_bc_matrix.h5
-    #   2--104-M3_sample_filtered_feature_bc_matrix.h5
-    #   ...
     INPUT_DIR = "/dcs07/antar/data/cellranger/feature_matrices"
 
-    # Output merged file
-    OUTPUT_PATH = "/dcl01/hongkai/data/data/hjiang/Data/long_covid/long_covid.h5ad"
+    OUTPUT_PATH = "/dcl01/hongkai/data/data/hjiang/Data/long_covid/long_covid_test.h5ad"
 
     merge_cellranger_h5_to_h5ad(INPUT_DIR, OUTPUT_PATH)

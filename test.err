@@ -1,0 +1,51 @@
+2026-03-01 12:23:40 | [INFO] init
+2026-03-01 12:23:46 | [INFO] 🔬 Input data has 260269 cells and 2240 genes
+2026-03-01 12:23:46 | [INFO] 🔗 Matching reference genes in the model
+2026-03-01 12:23:46 | [INFO] 🧬 1038 features used for prediction
+2026-03-01 12:23:46 | [INFO] ⚖️ Scaling input data
+2026-03-01 12:23:50 | [INFO] 🖋️ Predicting labels
+2026-03-01 12:23:51 | [INFO] ✅ Prediction done!
+... storing 'sample' as categorical
+... storing 'OutSMART ID' as categorical
+... storing 'Sex' as categorical
+... storing 'LC/Recovered' as categorical
+... storing 'BMI category' as categorical
+... storing 'age_cluster' as categorical
+... storing 'sample' as categorical
+... storing 'OutSMART ID' as categorical
+... storing 'Sex' as categorical
+... storing 'LC/Recovered' as categorical
+... storing 'BMI category' as categorical
+... storing 'age_cluster' as categorical
+... storing 'sample' as categorical
+... storing 'OutSMART ID' as categorical
+... storing 'Sex' as categorical
+... storing 'LC/Recovered' as categorical
+... storing 'BMI category' as categorical
+... storing 'age_cluster' as categorical
+... storing 'sample' as categorical
+... storing 'OutSMART ID' as categorical
+... storing 'Sex' as categorical
+... storing 'LC/Recovered' as categorical
+... storing 'BMI category' as categorical
+... storing 'age_cluster' as categorical
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:456: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "names"] = self.var_names[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:458: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "scores"] = scores[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:461: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals"] = pvals[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:471: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals_adj"] = pvals_adj[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:482: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "logfoldchanges"] = np.log2(
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:456: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "names"] = self.var_names[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:458: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "scores"] = scores[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:461: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals"] = pvals[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:471: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals_adj"] = pvals_adj[global_indices]
+/users/hjiang/.conda/envs/hongkai/lib/python3.10/site-packages/scanpy/tools/_rank_genes_groups.py:482: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "logfoldchanges"] = np.log2(
