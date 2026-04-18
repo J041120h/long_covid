@@ -1,0 +1,296 @@
+================================================================================
+POWERPOINT SLIDE CONTENT (Updated with actual results)
+Paper: Yin et al., Nature Immunology 25, 218-225 (2024)
+"Long COVID manifests with T cell dysregulation, inflammation and
+ an uncoordinated adaptive immune response to SARS-CoV-2"
+================================================================================
+
+KEY METHODOLOGICAL NOTE:
+-------------------------------------------------------
+The paper's main analyses use CyTOF (protein) on antigen-specific T cells.
+All CyTOF markers are protein-coding genes with a 1-to-1 gene-protein mapping:
+  CXCR4 protein = CXCR4 gene | PD-1 protein = PDCD1 gene | etc.
+Checking the same genes at mRNA level in our scRNA-seq is a valid approach
+("transcriptomic validation of CyTOF findings") — mRNA and protein levels
+correlate reasonably well for surface immune receptors.
+
+The real caveat is the CELL POPULATION, not mRNA vs protein:
+  Paper: ~1-5% of T cells (SARS-CoV-2-specific, peptide-stimulated + sorted)
+  Ours:  100% of T cells (all T cells, no antigen selection)
+→ Any signal enriched in the 1-5% antigen-specific cells will be diluted
+  ~20-100x when averaged over all T cells in our pseudobulk data.
+
+We split genes into two tiers based on what cell population the paper used:
+  Tier 1 (green):  paper's scRNA-seq results using all PBMCs (same as us)
+  Tier 2 (orange): paper's CyTOF on antigen-specific T cells (dilution expected)
+
+================================================================================
+SLIDE 1 — Title
+================================================================================
+TITLE:  Replication of Long COVID Immune Signatures in scRNA-seq PBMC Data
+
+SUBTITLE: Yin et al., Nature Immunology 2024
+          Our cohort: 14 LC, 20 Recovered | 1-month and 6-month | 10 PBMC cell types
+
+FIGURE: none
+
+================================================================================
+SLIDE 2 — The Paper's Methods and Claims
+================================================================================
+TITLE:  What the Paper Did (Yin et al. 2024)
+
+BULLET POINTS:
+  Main cohort: LC vs Recovered individuals, ~8 months post-infection
+
+  Technologies used:
+  ① CyTOF (mass cytometry) — Figs. 1-4 — PROTEINS on T cells
+     Measured: CXCR4, CXCR5, CCR6 (CD4+) and PD-1, CTLA4, TIGIT (CD8+)
+
+  ② scRNA-seq — Extended Data Fig. 9 — mRNA
+     Only 2 DE genes found: ALAS2 ↑ and OR7D2 ↑ in LC
+     Also validated CXCR4/CCR6 mRNA in CD4+ T cells
+
+  ③ Olink proteomics — Fig. 5 — circulating proteins
+
+  Key claim requiring context:
+  • "Antigen-specific" = T cells were stimulated with SARS-CoV-2 peptides
+    ex vivo, then sorted by cytokine production (IFNγ, IL-2, TNF)
+  • Only the SARS-CoV-2-reactive subset of T cells was analyzed for CyTOF
+
+  → Our data has NO antigen-specific selection — this is a critical difference
+
+FIGURE: none (or screenshot of paper Figure 1 / Extended Data Fig. 9)
+
+================================================================================
+SLIDE 3 — Comparability of Our Data
+================================================================================
+TITLE:  What We Can and Cannot Compare
+
+BULLET POINTS:
+  All CyTOF markers are protein-coding genes — gene name = protein name.
+  Checking mRNA levels for CyTOF protein findings is valid science.
+  The real question is cell population, not mRNA vs protein:
+
+  Paper finding                     | Cell population       | Signal dilution?
+  ----------------------------------|-----------------------|------------------
+  ALAS2/OR7D2 (scRNA-seq, all PBMC) | All PBMCs (like us)  | None ✅
+  Cell type proportions             | All PBMCs (like us)  | None ✅
+  CXCR4/CCR6 mRNA (scRNA-seq valid.)| All PBMCs (like us)  | None ✅
+  CXCR4/CXCR5 protein (CyTOF)      | Antigen-specific only | ~20-100x diluted ⚠️
+  PD-1/CTLA4/TIGIT protein (CyTOF) | Antigen-specific only | ~20-100x diluted ⚠️
+
+  Main caveat:
+  • SARS-CoV-2-specific T cells = ~1-5% of all T cells
+  • Their elevated CXCR4/PD-1 signal is averaged with ~95% of non-specific cells
+  • Result: small effect size, hard to detect without antigen enrichment
+
+FIGURE: none
+
+================================================================================
+SLIDE 4 — Cell Type Proportions (✅ Directly Comparable)
+================================================================================
+TITLE:  Cell Type Proportions: Significant Differences at 6 Months
+
+BULLET POINTS:
+  Directly comparable to paper (Extended Data Fig. 1 cluster distribution)
+  Test: Wilcoxon rank-sum test on per-sample proportions (LC vs Recovered)
+
+  Statistically significant (p < 0.05):
+  At 6 months:
+  • CD14+ Monocyte ↑ in LC   (LC=23.6%  vs Rec=14.5%,  p = 0.011) ★
+  • Memory CD4+ T  ↓ in LC   (LC=12.9%  vs Rec=17.4%,  p = 0.028) ★
+  At 1 month:
+  • CD16+ Monocyte ↓ in LC   (LC=1.3%   vs Rec=2.8%,   p = 0.024) ★
+
+  Trending (p < 0.10):
+  • Lymphocyte ↓ in LC at 6M  (LC=17.1% vs Rec=23.9%,  p = 0.061)
+  • Naive CD8+ T ↓ in LC at 6M (LC=3.8% vs Rec=5.7%,   p = 0.077)
+
+  Interpretation:
+  • CD14+ Monocyte expansion at 6M suggests persistent monocyte activation
+    → Consistent with paper's monocyte inflammatory findings (Fig. 1)
+  • Memory CD4+ T depletion at 6M → consistent with T cell dysregulation claim
+  • CD16+ Monocyte depletion at 1M → early monocyte subset redistribution
+
+FIGURE: 01_cell_proportions.png
+
+================================================================================
+SLIDE 5 — ALAS2 and OR7D2 (✅ Primary scRNA-seq Hit, Does Not Replicate)
+================================================================================
+TITLE:  ALAS2 and OR7D2: The Paper's Only scRNA-seq DE Genes — Not Replicated
+
+BULLET POINTS:
+  These are the ONLY two genes the paper found significantly DE by scRNA-seq
+  (Extended Data Fig. 9, volcano plots of LC vs Recovered clusters)
+
+  What the paper found:
+  • ALAS2 (heme synthesis enzyme): UP in LC across multiple clusters
+  • OR7D2 (odorant receptor): UP in LC across multiple clusters
+
+  What we find in our data (20 cell-type × timepoint tests for ALAS2):
+  • DOWN in LC: 13 out of 20 tests (65%) — opposite to paper
+  • UP in LC:    7 out of 20 tests (35%)
+  • Example: B Cell 1M logFC=-0.527; Lymphocyte 1M logFC=-1.150 (both DOWN)
+  • No tests reach FDR < 0.05 (total: 311,088 tests, 0 significant genome-wide)
+
+  Why inconsistent?
+  • Paper and our study both used all-PBMC scRNA-seq — cell population matches
+  • Most likely: small sample size (14 LC, 20 Rec) → underpowered to detect
+    the modest effect sizes the paper reported
+  • Cell type annotation differences may also play a role
+
+FIGURE: 02_ALAS2_OR7D2_expression.png
+
+================================================================================
+SLIDE 6 — Tissue-Homing Receptors in CD4+ T (⚠️ mRNA proxy for CyTOF)
+================================================================================
+TITLE:  CD4+ T Cell Tissue-Homing Receptors: mRNA-Level Signal (Mixed)
+
+BULLET POINTS:
+  Context:
+  • Paper (Fig. 2) measured CXCR4/CXCR5/CCR6 as PROTEINS by CyTOF
+    on SARS-CoV-2 peptide-stimulated, antigen-specific CD4+ T cells
+  • Paper found these markers UP in LC — indicating altered tissue homing
+
+  What we find (mRNA in ALL Memory + Naive CD4+ T cells, mean logFC):
+  Consistent with paper direction:
+  • CCR4:   mean logFC = +0.113  ↑ in LC (weakly consistent)
+  • CD40LG: mean logFC = +0.240  ↑ in LC (weakly consistent)
+
+  Inconsistent with paper direction:
+  • CXCR4:  mean logFC = −0.065  ↓ in LC  (paper found UP)
+  • CXCR5:  mean logFC = −0.158  ↓ in LC  (paper found UP)
+  • CCR6:   mean logFC = −0.336  ↓ in LC  (paper found UP)
+  • ITGB1:  mean logFC = −0.025  ↓ in LC  (paper found UP)
+
+  Why the inconsistency?
+  • Paper analyzed SARS-CoV-2-specific T cells (~1-5% of all T cells)
+  • We analyze 100% of CD4+ T cells — signal diluted by the non-reactive majority
+  • 3 of 6 markers DOWN (opposite direction) — results are not interpretable
+    as supporting the paper's CyTOF findings
+
+FIGURE: 03_tissue_homing_CD4.png
+
+================================================================================
+SLIDE 7 — CD8+ T Exhaustion (⚠️ mRNA proxy for CyTOF)
+================================================================================
+TITLE:  CD8+ T Exhaustion Markers: GZMK Consistently Down in LC
+
+BULLET POINTS:
+  Context:
+  • Paper (Fig. 3) found PD-1+CTLA4+ CD8+ T cells elevated in LC
+  • Measured as PROTEINS by CyTOF on antigen-specific CD8+ T cells
+
+  What we find in mRNA across all CD8+ T cells (mean logFC across timepoints):
+  Consistent with paper direction:
+  • GZMK:  mean logFC = −0.874  ↓ in LC ★ STRONGEST SIGNAL
+            GZMK = early effector marker; its loss indicates exhausted/
+            terminally differentiated cells replacing less-differentiated ones
+            → consistent with exhaustion enrichment the paper described
+  • GZMB:  mean logFC = +0.079  ↑ in LC (weakly consistent; paper expects UP)
+  • TIGIT:  mean logFC = +0.025  ↑ in LC (weakly consistent; paper expects UP)
+
+  Inconsistent with paper direction:
+  • PDCD1 (PD-1): mean logFC = −0.166  ↓ in LC  (paper expects UP)
+  • CTLA4:        mean logFC = −0.272  ↓ in LC  (paper expects UP)
+  • LAG3:         mean logFC = −0.409  ↓ in LC  (paper expects UP)
+  • HAVCR2 (TIM3):mean logFC = −0.159  ↓ in LC  (paper expects UP)
+  • GZMA:         mean logFC = −0.260  ↓ in LC  (paper expects UP)
+  • PRF1:         mean logFC = −0.069  ↓ in LC  (paper expects UP)
+
+  Interpretation:
+  • GZMK down-regulation is the most reliable and biologically coherent signal
+  • Classical exhaustion markers (PD-1, CTLA4, LAG3) are not detectable
+    without antigen-specific T cell enrichment
+
+FIGURE: 04_exhaustion_cytotoxic_CD8.png
+
+================================================================================
+SLIDE 8 — logFC Heatmap Overview
+================================================================================
+TITLE:  Overview: logFC of All Paper Genes Across Cell Types
+
+BULLET POINTS:
+  Each cell in the heatmap = log2 fold-change (LC vs Recovered) for one
+  gene-cell type combination. Blue = DOWN in LC, Red = UP in LC.
+
+  Color coding by row:
+  • Green rows (Tier 1) = paper's actual scRNA-seq genes — direct comparison
+  • Orange rows (Tier 2) = CyTOF protein markers — mRNA proxy only
+
+  Key observations:
+  • GZMK (Tier 2, CD8+): most consistently negative across cell types ★
+    logFC ≈ −0.874 mean, dark blue in all CD8+ columns
+  • Monocyte columns: ALAS2 shows mixed direction (some UP, some DOWN)
+  • CD4+ T columns: CXCR4 mildly negative across most cell types (inconsistent)
+  • Most genes near zero logFC — expected (small N, pseudobulk analysis)
+
+  No genes reach FDR < 0.05 (n = 14 LC, 20 Rec — underpowered)
+
+FIGURE: 05_lfc_heatmap_both_tiers.png
+
+================================================================================
+SLIDE 9 — Overall DE Landscape (Volcano)
+================================================================================
+TITLE:  Differential Expression Landscape: Key Cell Types
+
+BULLET POINTS:
+  Volcano plots for Memory CD4+ T, CD8+ T, CD14+ Monocyte
+  Green dots = Tier 1 scRNA-seq genes | Orange dots = Tier 2 CyTOF proxies
+
+  Observations:
+  • No genome-wide significant genes in any cell type (total 311,088 tests, 0 FDR<0.05)
+  • Paper genes scatter near zero on both axes — effect sizes below detection threshold
+  • GZMK is shifted leftward (negative logFC) in CD8+ T panels
+  • Top trending genes vary by timepoint (1M vs 6M patterns differ)
+  • All paper gene FDRs > 0.8 — noise, not signal at this sample size
+
+  What this tells us:
+  • Insufficient statistical power to confirm single-gene DE results
+  • Cell proportion analysis (Slide 4) is more robust to sample size
+
+FIGURE: 06_volcano_key_celltypes.png
+
+================================================================================
+SLIDE 10 — Conclusions
+================================================================================
+TITLE:  Conclusions
+
+BULLET POINTS:
+  What we CAN confirm (statistically significant, p < 0.05):
+  ✓ CD14+ Monocyte ↑ in LC at 6M  (LC=23.6% vs Rec=14.5%, p=0.011)
+    → Supports paper's monocyte inflammatory finding (Fig. 1)
+  ✓ Memory CD4+ T ↓ in LC at 6M   (LC=12.9% vs Rec=17.4%, p=0.028)
+    → Supports paper's T cell dysregulation claim
+  ✓ CD16+ Monocyte ↓ in LC at 1M  (LC=1.3% vs Rec=2.8%, p=0.024)
+    → Early monocyte subset redistribution
+
+  What we partially support (consistent direction, not significant):
+  ~ GZMK ↓ in LC (mean logFC=−0.874 in CD8+ T) — biologically coherent
+    mRNA signal consistent with less-differentiated effector T cell loss
+
+  What we CANNOT confirm:
+  ✗ ALAS2/OR7D2 scRNA-seq hits — our data shows opposite direction (65% DOWN)
+  ✗ PDCD1/CTLA4/TIGIT exhaustion proteins — all inconsistent (dilution effect)
+  ✗ CXCR4/CXCR5/CCR6 tissue-homing proteins — inconsistent (dilution effect)
+
+  Why the mismatch?
+  • For T cell genes: paper isolated SARS-CoV-2-specific T cells (1-5% of total)
+    → Our pseudobulk averages over ALL T cells → signal diluted ~20-100x
+  • For all genes: 14 LC vs 20 Rec is underpowered for pseudobulk DE
+    → 0 FDR-significant genes genome-wide
+
+  To strengthen replication:
+  → Need antigen-specific T cell isolation, OR larger N (≥30 per group)
+  → Most replicable in our data: cell proportion and monocyte findings
+
+================================================================================
+FIGURES (results/figures/):
+================================================================================
+  Slide 4  →  01_cell_proportions.png
+  Slide 5  →  02_ALAS2_OR7D2_expression.png
+  Slide 6  →  03_tissue_homing_CD4.png
+  Slide 7  →  04_exhaustion_cytotoxic_CD8.png
+  Slide 8  →  05_lfc_heatmap_both_tiers.png
+  Slide 9  →  06_volcano_key_celltypes.png
+================================================================================

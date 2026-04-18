@@ -1,0 +1,21 @@
+cell_type,timepoint,pct_concordant,n_genes,n_concordant
+B Cell,1_month,60,20,12
+B Cell,6_month,40,20,8
+CD14 Monocyte,1_month,20,20,4
+CD14 Monocyte,6_month,35,20,7
+CD16 Monocyte,1_month,80,20,16
+CD16 Monocyte,6_month,65,20,13
+CD8 T Cell,1_month,45,20,9
+CD8 T Cell,6_month,60,20,12
+Lymphocyte,1_month,45,20,9
+Lymphocyte,6_month,60,20,12
+Memory CD4 T Cell,1_month,40,20,8
+Memory CD4 T Cell,6_month,40,20,8
+NK Cell,1_month,45,20,9
+NK Cell,6_month,50,20,10
+Naive CD4 T Cell,1_month,55,20,11
+Naive CD4 T Cell,6_month,55,20,11
+Naive CD8 T Cell,1_month,40,20,8
+Naive CD8 T Cell,6_month,40,20,8
+cDC2,1_month,50,20,10
+cDC2,6_month,65,20,13

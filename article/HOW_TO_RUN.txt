@@ -1,0 +1,69 @@
+================================================================================
+LONG COVID scRNA-seq: COMPARISON WITH PUBLISHED PAPER
+================================================================================
+
+QUICK START
+-----------
+  sbatch /users/hjiang/GenoDistance/long_covid/article/code/submit.sh
+  squeue -u hjiang                                        # monitor
+  tail -f logs/run_*.out                                  # live output
+
+Or interactively on a compute node:
+  srun --mem=32G --time=2:00:00 --pty bash
+  module load conda_R/4.4.x
+  Rscript code/run_analysis.R
+
+================================================================================
+FOLDER STRUCTURE
+================================================================================
+
+article/
+  code/
+    run_analysis.R          <- single analysis script (R)
+    submit.sh               <- SLURM submission wrapper
+  results/
+    figures/                <- 5 key plots (generated after running)
+    tables/                 <- CSV tables (generated after running)
+    summary/                <- text report (generated after running)
+  logs/                     <- SLURM stdout/stderr
+  scRNA seq papers on long COVID.pdf   <- reference paper (input)
+  HOW_TO_RUN.txt            <- this file
+
+================================================================================
+WHAT IS GENERATED
+================================================================================
+
+5 FIGURES:
+  01_cell_proportions.png      -- Boxplots: proportion of each cell type,
+                                  LC vs Recovered, with Wilcoxon p-values
+  02_lfc_heatmap.png           -- Heatmap: logFC of paper key genes across all
+                                  cell types and timepoints (the core overview)
+  03_key_gene_expression.png   -- Pseudobulk expression boxplots for paper genes
+                                  in CD4+ T, CD8+ T, and CD14+ Monocyte cells
+  04_volcano_key_celltypes.png -- Volcano plots for 3 key cell types (both
+                                  timepoints overlaid); paper genes highlighted
+  05_concordance.png           -- Dot plot: each gene × cell type, showing
+                                  direction and concordance with paper
+
+6 TABLES:
+  all_DE_results.csv           -- Full DEG results (all cell types)
+  paper_genes_DE.csv           -- Subset: only paper key genes
+  significant_genes.csv        -- Genes with FDR < 0.05
+  proportion_summary.csv       -- Mean proportions + Wilcoxon p per cell type
+  concordance_by_celltype.csv  -- % concordant direction per cell type
+  concordance_by_gene.csv      -- % concordant direction per gene
+
+1 SUMMARY:
+  summary/analysis_summary.txt -- Full text report with all key numbers
+
+================================================================================
+PAPER CLAIMS BEING TESTED
+================================================================================
+
+  A. Cell type proportions differ (LC vs Recovered)
+  B. CD4+ T cells: CXCR4, CXCR5, CCR4, CCR6 UP in LC (tissue-homing)
+  C. CD8+ T cells: PDCD1, CTLA4, TIGIT, LAG3 UP in LC (exhaustion)
+  D. CD8+ T cells: GZMA, GZMB, PRF1 UP; GZMK DOWN in LC (cytotoxic)
+  E. Monocytes: ALAS2, IFIT2, IFIT3, ISG15 UP in LC (inflammatory)
+
+================================================================================
