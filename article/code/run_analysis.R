@@ -27,6 +27,24 @@
 #   Tier 2 (orange) — paper used CyTOF on antigen-specific cells; we test
 #     the same genes at mRNA level in all cells (signal expected to be diluted):
 #
+# COHORT NOTE (added 2026-04):
+#
+#   The paper's bulk RNA-seq + scRNA-seq subset was FEMALE-ONLY at month 8
+#   postinfection (T2). Quote: "We limited these studies to females because
+#   individuals with high levels of OR7D2 or ALAS2 were mostly female (the top
+#   five OR7D2 expressors were female, as were four of the top six ALAS2
+#   expressors). For comparison, we included four randomly selected females
+#   from the R specimens."
+#
+#   For valid comparison with the paper's RNA-seq findings, we restrict our
+#   data to FEMALE samples only. The closest timepoint to paper's month 8 in
+#   our cohort is 6_month (we report both 1_month and 6_month for context).
+#
+#   Cohort selection is controlled by the --cohort flag:
+#     --cohort=female   (default)   paper-aligned analysis
+#     --cohort=all                  full cohort (legacy behaviour)
+#     --cohort=male                 male-only sensitivity check
+#
 # OUTPUTS:
 #   figures/ 01_cell_proportions.png      -- claim 1 (proportion changes)
 #            02_scrna_genes_heatmap.png   -- claims 2-4 (scRNA-comparable genes)
@@ -53,17 +71,38 @@ suppressPackageStartupMessages({
   library(RColorBrewer); library(scales)
 })
 
+# -- Cohort flag --------------------------------------------------------------
+args <- commandArgs(trailingOnly = TRUE)
+COHORT <- "female"  # paper-aligned default
+for (a in args) {
+  if (grepl("^--cohort=", a)) COHORT <- tolower(sub("^--cohort=", "", a))
+}
+stopifnot(COHORT %in% c("female", "all", "male"))
+cat(sprintf("[cohort] running with COHORT = %s\n", COHORT))
+
 # -- Paths --------------------------------------------------------------------
 DE_ROOT  <- "/dcs07/hongkai/data/harry/result/long_covid/sample_pseudobulk_differential_analysis/step1/step1_cross_group/LC_vs_Recovered"
 PROP_DIR <- "/dcs07/hongkai/data/harry/result/long_covid/sample_pseudobulk_differential_analysis/different_time_point"
 META_CSV <- "/dcs07/hongkai/data/harry/result/long_covid/sample_pseudobulk_differential_analysis/Whole_Pseudobulk/required/pseudobulk_metadata.csv"
-OUT_FIG  <- "/users/hjiang/GenoDistance/long_covid/article/results/figures"
-OUT_TBL  <- "/users/hjiang/GenoDistance/long_covid/article/results/tables"
-OUT_SUM  <- "/users/hjiang/GenoDistance/long_covid/article/results/summary"
+
+result_suffix <- if (COHORT == "all") "" else paste0("_", COHORT)
+RES_ROOT <- paste0("/users/hjiang/GenoDistance/long_covid/article/results", result_suffix)
+OUT_FIG  <- file.path(RES_ROOT, "figures")
+OUT_TBL  <- file.path(RES_ROOT, "tables")
+OUT_SUM  <- file.path(RES_ROOT, "summary")
 for (d in c(OUT_FIG, OUT_TBL, OUT_SUM)) dir.create(d, recursive = TRUE, showWarnings = FALSE)
+
+ARTICLE_ROOT <- "/users/hjiang/GenoDistance/long_covid/article"
 
 TIMEPOINTS <- c("1_month", "6_month")
 GROUP_PAL  <- c("LC" = "#E64B35", "Recovered" = "#4DBBD5")
+
+COHORT_BANNER <- switch(
+  COHORT,
+  female = "[FEMALE-ONLY cohort | paper-aligned: paper used female-only bulk/scRNA-seq at 8mo postinfection]",
+  male   = "[MALE-ONLY cohort | sensitivity check; paper did NOT analyse males in bulk/scRNA-seq]",
+  all    = "[FULL cohort | paper used female-only — direct comparison is in the female-only run]"
+)
 
 # -- Gene sets by comparability tier ------------------------------------------
 
@@ -95,22 +134,115 @@ cat("[1/6] Loading data...\n")
 
 meta <- as.data.frame(fread(META_CSV))
 
-# All DE results
-de_list <- list()
-for (tp in TIMEPOINTS) {
-  ct_dirs <- list.dirs(file.path(DE_ROOT, tp), recursive = FALSE, full.names = FALSE)
-  ct_dirs <- ct_dirs[!grepl("^_", ct_dirs)]
-  for (ct in ct_dirs) {
-    path <- file.path(DE_ROOT, tp, ct, "LC_vs_Recovered", "DE_results.csv")
-    if (!file.exists(path)) next
-    df <- tryCatch(as.data.frame(fread(path)), error = function(e) NULL)
-    if (is.null(df) || nrow(df) == 0) next
-    df$timepoint <- tp
-    df$cell_type <- trimws(gsub("_", " ", ct))
-    de_list[[paste(tp, ct)]] <- df
-  }
+# -- Cohort sample selection --------------------------------------------------
+# Save the subset metadata so the user can see exactly which samples are in scope.
+cohort_meta <- if (COHORT == "all") {
+  meta
+} else {
+  cohort_label <- if (COHORT == "female") "Female" else "Male"
+  meta[meta$Sex == cohort_label, ]
 }
-all_de <- bind_rows(de_list)
+cohort_samples <- unique(as.character(cohort_meta$filename_sample_id))
+
+cohort_csv <- file.path(ARTICLE_ROOT, paste0(COHORT, "_subset_samples.csv"))
+fwrite(cohort_meta, cohort_csv)
+cat(sprintf("  cohort=%s: %d sample-timepoint rows, %d unique subjects -> %s\n",
+            COHORT, nrow(cohort_meta), length(cohort_samples), cohort_csv))
+
+# Per-timepoint LC vs Rec counts in the cohort (sanity check for power)
+for (tp in TIMEPOINTS) {
+  tp_num <- as.integer(gsub("_month", "", tp))
+  sub <- cohort_meta[cohort_meta$month == tp_num, ]
+  n_lc  <- sum(sub$`LC/Recovered` == "LC",        na.rm = TRUE)
+  n_rec <- sum(sub$`LC/Recovered` == "Recovered", na.rm = TRUE)
+  cat(sprintf("    %s: n_LC=%d, n_Recovered=%d\n", tp, n_lc, n_rec))
+}
+
+# -- DE results --------------------------------------------------------------
+# For COHORT="all": load pre-computed DE files (limma/edgeR pipeline).
+# For COHORT="female"/"male": pre-computed DE used the WHOLE cohort and is not
+# valid for a sex-stratified comparison. We recompute a cohort-restricted DE
+# from the pseudobulk expression matrices using a per-gene t-test on the log
+# pseudobulk values (logFC = mean(LC) - mean(Rec); FDR via BH). With ~4 vs 4
+# samples this is underpowered for genome-wide FDR<0.05 hits but gives valid
+# effect-size and direction estimates for the targeted paper-gene comparisons.
+load_precomputed_de <- function() {
+  de_list <- list()
+  for (tp in TIMEPOINTS) {
+    ct_dirs <- list.dirs(file.path(DE_ROOT, tp), recursive = FALSE, full.names = FALSE)
+    ct_dirs <- ct_dirs[!grepl("^_", ct_dirs)]
+    for (ct in ct_dirs) {
+      path <- file.path(DE_ROOT, tp, ct, "LC_vs_Recovered", "DE_results.csv")
+      if (!file.exists(path)) next
+      df <- tryCatch(as.data.frame(fread(path)), error = function(e) NULL)
+      if (is.null(df) || nrow(df) == 0) next
+      df$timepoint <- tp
+      df$cell_type <- trimws(gsub("_", " ", ct))
+      de_list[[paste(tp, ct)]] <- df
+    }
+  }
+  bind_rows(de_list)
+}
+
+compute_cohort_de <- function() {
+  de_list <- list()
+  for (tp in TIMEPOINTS) {
+    tp_num <- gsub("_month", "", tp)
+    ct_dirs <- list.dirs(file.path(PROP_DIR, tp), recursive = FALSE, full.names = TRUE)
+    for (ct_dir in ct_dirs) {
+      expr_path <- file.path(ct_dir, "pseudobulk_expression.csv")
+      if (!file.exists(expr_path)) next
+      df <- tryCatch(as.data.frame(fread(expr_path)), error = function(e) NULL)
+      if (is.null(df) || nrow(df) == 0) next
+
+      raw_ids   <- as.character(df[[1]])
+      sample_id <- gsub(paste0("-M", tp_num, "$"), "", raw_ids)
+      gene_mat  <- as.matrix(df[, -1, drop = FALSE])
+      rownames(gene_mat) <- raw_ids
+
+      keep <- sample_id %in% cohort_samples
+      if (sum(keep) < 4) next
+      gene_mat  <- gene_mat[keep, , drop = FALSE]
+      sub_meta  <- cohort_meta[match(sample_id[keep], as.character(cohort_meta$filename_sample_id)), ]
+      grp <- sub_meta$`LC/Recovered`
+
+      lc_idx  <- which(grp == "LC")
+      rec_idx <- which(grp == "Recovered")
+      if (length(lc_idx) < 2 || length(rec_idx) < 2) next
+
+      mean_lc  <- colMeans(gene_mat[lc_idx,  , drop = FALSE])
+      mean_rec <- colMeans(gene_mat[rec_idx, , drop = FALSE])
+      logFC    <- mean_lc - mean_rec  # pseudobulk values are already log-scale
+
+      pvals <- vapply(seq_len(ncol(gene_mat)), function(j) {
+        x <- gene_mat[lc_idx, j];  y <- gene_mat[rec_idx, j]
+        if (length(unique(c(x, y))) < 2) return(NA_real_)
+        tryCatch(t.test(x, y)$p.value, error = function(e) NA_real_)
+      }, numeric(1))
+
+      fdr <- p.adjust(pvals, method = "BH")
+      ct_clean <- trimws(gsub("_", " ", basename(ct_dir)))
+
+      de_list[[paste(tp, basename(ct_dir))]] <- data.frame(
+        gene = colnames(gene_mat),
+        logFC = logFC, AveExpr = (mean_lc + mean_rec) / 2,
+        PValue = pvals, FDR = fdr,
+        timepoint = tp, cell_type = ct_clean,
+        stringsAsFactors = FALSE
+      )
+    }
+    cat(sprintf("    DE recomputed for %s\n", tp))
+  }
+  bind_rows(de_list)
+}
+
+if (COHORT == "all") {
+  cat("  Loading pre-computed DE (full-cohort limma pipeline)...\n")
+  all_de <- load_precomputed_de()
+} else {
+  cat(sprintf("  Recomputing DE on %s subset from pseudobulk expression (t-test, ~few minutes)...\n", COHORT))
+  all_de <- compute_cohort_de()
+}
 fwrite(all_de, file.path(OUT_TBL, "all_DE_results.csv"))
 
 sig_genes <- all_de %>% filter(FDR < 0.05) %>% arrange(FDR)
@@ -144,9 +276,15 @@ for (tp in c("1_month", "3_month", "6_month")) {
 prop_all <- bind_rows(prop_list) %>%
   left_join(meta %>%
               mutate(sample_id = as.character(filename_sample_id)) %>%
-              select(sample_id, `LC/Recovered`, Sex),
+              select(sample_id, `LC/Recovered`, Sex) %>%
+              distinct(),  # one row per subject — LC/Sex are invariant across timepoints
             by = "sample_id") %>%
   filter(!is.na(`LC/Recovered`))
+
+if (COHORT != "all") {
+  sex_keep <- if (COHORT == "female") "Female" else "Male"
+  prop_all <- prop_all %>% filter(Sex == sex_keep)
+}
 
 # Load pseudobulk expression for selected genes
 expr_list <- list()
@@ -172,9 +310,18 @@ for (tp in TIMEPOINTS) {
 expr_all <- bind_rows(expr_list) %>%
   left_join(meta %>%
               mutate(sample_id = as.character(filename_sample_id)) %>%
-              select(sample_id, `LC/Recovered`, Sex),
+              select(sample_id, `LC/Recovered`, Sex) %>%
+              distinct(),  # one row per subject — LC/Sex are invariant across timepoints
             by = "sample_id") %>%
   filter(!is.na(`LC/Recovered`))
+
+if (COHORT != "all") {
+  sex_keep <- if (COHORT == "female") "Female" else "Male"
+  expr_all <- expr_all %>% filter(Sex == sex_keep)
+}
+
+cat(sprintf("  After cohort filter: prop_all=%d rows | expr_all=%d rows | all_de=%d rows\n",
+            nrow(prop_all), nrow(expr_all), nrow(all_de)))
 
 # =============================================================================
 # FIGURE 1 — Cell Type Proportions (scRNA-seq comparable, Claim 1)
@@ -221,7 +368,9 @@ p1 <- ggplot(prop_12,
   scale_fill_manual(values  = GROUP_PAL) +
   scale_color_manual(values = GROUP_PAL) +
   labs(title    = "Cell Type Proportions: Long COVID vs Recovered",
-       subtitle = "Directly comparable to paper Extended Data Fig. 1 (scRNA-seq clusters)\n*** p<0.001  ** p<0.01  * p<0.05  . p<0.10  (Wilcoxon)",
+       subtitle = paste0(COHORT_BANNER,
+                  "\nDirectly comparable to paper Extended Data Fig. 1 (scRNA-seq clusters)",
+                  "\n*** p<0.001  ** p<0.01  * p<0.05  . p<0.10  (Wilcoxon)"),
        x = NULL, y = "Proportion of PBMCs") +
   theme_bw(base_size = 10) +
   theme(legend.position = "none",
@@ -273,7 +422,9 @@ if (nrow(alas2_or7d2) > 0) {
     scale_fill_manual(values  = GROUP_PAL) +
     scale_color_manual(values = GROUP_PAL) +
     labs(title    = "ALAS2 and OR7D2 Expression: LC vs Recovered",
-         subtitle = "Paper's two primary scRNA-seq DE genes (Extended Data Fig. 9)\nDirectly comparable: both paper and our data use scRNA-seq mRNA",
+         subtitle = paste0(COHORT_BANNER,
+                    "\nPaper's two primary scRNA-seq DE genes (Extended Data Fig. 9)",
+                    "\nDirectly comparable: both paper and our data use scRNA-seq mRNA"),
          x = NULL, y = "Pseudobulk expression") +
     theme_bw(base_size = 9) +
     theme(legend.position = "bottom", legend.title = element_blank(),
@@ -346,7 +497,9 @@ make_expr_plot(
   genes      = CYTOF_CD4_GENES,
   cell_types = cd4_cts,
   title    = "Tissue-Homing Receptor mRNA in CD4+ T Cells: LC vs Recovered",
-  subtitle = "Paper (Fig. 2) shows these as PROTEINS by CyTOF on antigen-specific CD4+ T cells\nExtended Data Fig. 9 validates CXCR4/CCR6 mRNA — our comparison is at mRNA level",
+  subtitle = paste0(COHORT_BANNER,
+              "\nPaper (Fig. 2) shows these as PROTEINS by CyTOF on antigen-specific CD4+ T cells",
+              "\nExtended Data Fig. 9 validates CXCR4/CCR6 mRNA — our comparison is at mRNA level"),
   filename = "03_tissue_homing_CD4.png"
 )
 
@@ -356,7 +509,9 @@ make_expr_plot(
   genes      = CYTOF_CD8_GENES,
   cell_types = cd8_cts,
   title    = "CD8+ T Cell Exhaustion + Cytotoxic Markers: LC vs Recovered",
-  subtitle = "Paper (Fig. 3) shows PDCD1/CTLA4/TIGIT as PROTEINS by CyTOF on antigen-specific CD8+ T\nOur data: mRNA in all CD8+ T cells (no antigen-specificity filtering)",
+  subtitle = paste0(COHORT_BANNER,
+              "\nPaper (Fig. 3) shows PDCD1/CTLA4/TIGIT as PROTEINS by CyTOF on antigen-specific CD8+ T",
+              "\nOur data: mRNA in all CD8+ T cells (no antigen-specificity filtering)"),
   filename = "04_exhaustion_cytotoxic_CD8.png"
 )
 
@@ -415,7 +570,8 @@ tryCatch(
            fontsize          = 9,
            fontsize_row      = 9,
            fontsize_col      = 7,
-           main = paste("logFC (LC vs Recovered) — Green rows: paper's actual scRNA-seq genes",
+           main = paste0(COHORT_BANNER,
+                        "\nlogFC (LC vs Recovered) — Green rows: paper's actual scRNA-seq genes",
                         "\nOrange/Blue rows: CyTOF protein markers tested here as mRNA proxies",
                         "\nValues shown where |logFC| > 0.3"),
            border_color      = "grey85"),
@@ -474,7 +630,11 @@ p6 <- ggplot(volc_data, aes(x = logFC, y = neg_log10_fdr)) +
   scale_color_manual(values = color_map, name = NULL) +
   scale_shape_manual(values = c("1_month"=16, "6_month"=17), name = "Timepoint") +
   labs(title    = "Differential Expression Landscape: LC vs Recovered",
-       subtitle = "Green = paper's scRNA-seq genes (directly comparable)\nOrange = paper's CyTOF protein markers tested as mRNA\nCircle = 1 month  |  Triangle = 6 month",
+       subtitle = paste0(COHORT_BANNER,
+                  "\nGreen = paper's scRNA-seq genes (directly comparable)",
+                  "\nOrange = paper's CyTOF protein markers tested as mRNA",
+                  "\nCircle = 1 month  |  Triangle = 6 month",
+                  if (COHORT != "all") "\nNOTE: cohort DE recomputed by t-test on log pseudobulk; underpowered with n~4 per group" else ""),
        x = "log2 Fold Change (LC vs Recovered)", y = expression(-log[10](FDR))) +
   theme_bw(base_size = 10) +
   theme(legend.position = "bottom",
@@ -506,6 +666,24 @@ cat("===========================================================================
 cat("LONG COVID scRNA-seq: COMPARISON WITH YIN ET AL. 2024\n")
 cat("Nature Immunology 25, 218-225 (2024)\n")
 cat("===========================================================================\n\n")
+
+cat(sprintf("COHORT: %s\n", toupper(COHORT)))
+cat(sprintf("  %s\n", COHORT_BANNER))
+cat(sprintf("  Subset metadata file: %s\n", cohort_csv))
+cat(sprintf("  Subjects in cohort: %d\n", length(cohort_samples)))
+for (tp in TIMEPOINTS) {
+  tp_num <- as.integer(gsub("_month", "", tp))
+  sub <- cohort_meta[cohort_meta$month == tp_num, ]
+  n_lc  <- sum(sub$`LC/Recovered` == "LC", na.rm = TRUE)
+  n_rec <- sum(sub$`LC/Recovered` == "Recovered", na.rm = TRUE)
+  cat(sprintf("    %s: n_LC=%d, n_Recovered=%d\n", tp, n_lc, n_rec))
+}
+if (COHORT != "all") {
+  cat("  DE source: t-test on log pseudobulk expression (cohort-restricted, recomputed in-script)\n")
+} else {
+  cat("  DE source: pre-computed limma/edgeR pipeline (full cohort)\n")
+}
+cat("\n")
 
 cat("METHODOLOGICAL ALIGNMENT\n")
 cat("---------------------------------------------------------------------------\n")
@@ -599,4 +777,4 @@ cat("===========================================================================
 sink()
 
 cat("\n=== Analysis complete ===\n")
-cat("Results: /users/hjiang/GenoDistance/long_covid/article/results/\n")
+cat(sprintf("Cohort: %s\nResults: %s/\n", COHORT, RES_ROOT))

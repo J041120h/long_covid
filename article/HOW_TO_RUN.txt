@@ -2,16 +2,36 @@
 LONG COVID scRNA-seq: COMPARISON WITH PUBLISHED PAPER
 ================================================================================
 
-QUICK START
+COHORT NOTE
 -----------
+The Yin et al. 2024 paper restricted its bulk RNA-seq + scRNA-seq analyses to
+FEMALES at month 8 postinfection (paper quote: "We limited these studies to
+females because individuals with high levels of OR7D2 or ALAS2 were mostly
+female"). To make a like-for-like comparison, the script defaults to a
+female-only subset of our cohort, with the closest available timepoint being
+6_month. Outputs land in `results_female/` so the original full-cohort run
+under `results/` is preserved.
+
+Our female cohort at 6_month (closest to paper's 8mo): 4 LC vs 4 Recovered
+(subjects 110, 127, 147, 185 vs 129, 144, 151, 173).
+
+QUICK START (paper-aligned, female-only, default)
+-------------------------------------------------
   sbatch /users/hjiang/GenoDistance/long_covid/article/code/submit.sh
   squeue -u hjiang                                        # monitor
   tail -f logs/run_*.out                                  # live output
 
+OTHER COHORTS
+-------------
+  sbatch /users/hjiang/GenoDistance/long_covid/article/code/submit.sh --cohort=all
+  sbatch /users/hjiang/GenoDistance/long_covid/article/code/submit.sh --cohort=male
+
 Or interactively on a compute node:
   srun --mem=32G --time=2:00:00 --pty bash
   module load conda_R/4.4.x
-  Rscript code/run_analysis.R
+  Rscript code/run_analysis.R --cohort=female      # default, paper-aligned
+  Rscript code/run_analysis.R --cohort=all         # full cohort (legacy)
+  Rscript code/run_analysis.R --cohort=male        # sensitivity check
 
 ================================================================================
 FOLDER STRUCTURE
@@ -19,51 +39,65 @@ FOLDER STRUCTURE
 
 article/
   code/
-    run_analysis.R          <- single analysis script (R)
-    submit.sh               <- SLURM submission wrapper
-  results/
-    figures/                <- 5 key plots (generated after running)
-    tables/                 <- CSV tables (generated after running)
-    summary/                <- text report (generated after running)
-  logs/                     <- SLURM stdout/stderr
-  scRNA seq papers on long COVID.pdf   <- reference paper (input)
-  HOW_TO_RUN.txt            <- this file
+    run_analysis.R                    <- analysis script (R)
+    submit.sh                         <- SLURM submission wrapper
+  results/                            <- full-cohort run (legacy, --cohort=all)
+  results_female/                     <- paper-aligned, female-only (default)
+  results_male/                       <- sensitivity, male-only
+  female_subset_samples.csv           <- list of female samples in scope
+  male_subset_samples.csv             <- list of male samples in scope
+  all_subset_samples.csv              <- full metadata (when --cohort=all)
+  logs/                               <- SLURM stdout/stderr
+  scRNA seq papers on long COVID.pdf  <- reference paper (input)
+  HOW_TO_RUN.txt                      <- this file
+
+Each results_<cohort>/ folder contains figures/, tables/, summary/.
 
 ================================================================================
-WHAT IS GENERATED
+DE METHOD BY COHORT
 ================================================================================
 
-5 FIGURES:
-  01_cell_proportions.png      -- Boxplots: proportion of each cell type,
-                                  LC vs Recovered, with Wilcoxon p-values
-  02_lfc_heatmap.png           -- Heatmap: logFC of paper key genes across all
-                                  cell types and timepoints (the core overview)
-  03_key_gene_expression.png   -- Pseudobulk expression boxplots for paper genes
-                                  in CD4+ T, CD8+ T, and CD14+ Monocyte cells
-  04_volcano_key_celltypes.png -- Volcano plots for 3 key cell types (both
-                                  timepoints overlaid); paper genes highlighted
-  05_concordance.png           -- Dot plot: each gene × cell type, showing
-                                  direction and concordance with paper
+  --cohort=all     uses pre-computed limma/edgeR DE under
+                   .../step1/step1_cross_group/LC_vs_Recovered/
 
-6 TABLES:
-  all_DE_results.csv           -- Full DEG results (all cell types)
-  paper_genes_DE.csv           -- Subset: only paper key genes
-  significant_genes.csv        -- Genes with FDR < 0.05
-  proportion_summary.csv       -- Mean proportions + Wilcoxon p per cell type
-  concordance_by_celltype.csv  -- % concordant direction per cell type
-  concordance_by_gene.csv      -- % concordant direction per gene
+  --cohort=female  recomputes DE in-script: per-gene t-test on log pseudobulk
+  --cohort=male    expression for cohort-restricted samples; logFC =
+                   mean(LC) - mean(Recovered); FDR via Benjamini-Hochberg.
+                   With ~4 vs 4 samples this is underpowered for genome-wide
+                   FDR<0.05 hits but gives valid effect-size + direction
+                   estimates for the targeted paper-gene comparisons.
 
-1 SUMMARY:
-  summary/analysis_summary.txt -- Full text report with all key numbers
+================================================================================
+WHAT IS GENERATED (per cohort)
+================================================================================
+
+6 FIGURES:
+  01_cell_proportions.png             -- cell-type proportions, LC vs Rec
+  02_ALAS2_OR7D2_expression.png       -- paper's primary scRNA-seq DE genes
+  03_tissue_homing_CD4.png            -- CXCR4/CXCR5/CCR4/CCR6/ITGB1/CD40LG mRNA
+  04_exhaustion_cytotoxic_CD8.png     -- PDCD1/CTLA4/TIGIT/GZMs in CD8+ T
+  05_lfc_heatmap_both_tiers.png       -- logFC heatmap, scRNA + CyTOF tiers
+  06_volcano_key_celltypes.png        -- DE landscape, 3 key cell types
+
+TABLES:
+  all_DE_results.csv                  -- DE for cohort across all cell types
+  scrna_comparable_genes_DE.csv       -- Tier-1 (scRNA-seq) genes
+  cytof_proxy_genes_DE.csv            -- Tier-2 (CyTOF protein proxy) genes
+  proportion_summary.csv              -- proportions + Wilcoxon p
+  significant_genes.csv               -- FDR < 0.05
+
+SUMMARY:
+  summary/analysis_summary.txt        -- text report with cohort header
 
 ================================================================================
 PAPER CLAIMS BEING TESTED
 ================================================================================
 
   A. Cell type proportions differ (LC vs Recovered)
-  B. CD4+ T cells: CXCR4, CXCR5, CCR4, CCR6 UP in LC (tissue-homing)
-  C. CD8+ T cells: PDCD1, CTLA4, TIGIT, LAG3 UP in LC (exhaustion)
-  D. CD8+ T cells: GZMA, GZMB, PRF1 UP; GZMK DOWN in LC (cytotoxic)
-  E. Monocytes: ALAS2, IFIT2, IFIT3, ISG15 UP in LC (inflammatory)
+  B. Bulk RNA-seq: ALAS2, OR7D2 UP in LC (paper Fig. 5a; female-only cohort)
+  C. CD4+ T cells: CXCR4, CXCR5, CCR4, CCR6 UP in LC (tissue-homing)
+  D. CD8+ T cells: PDCD1, CTLA4, TIGIT, LAG3 UP in LC (exhaustion)
+  E. CD8+ T cells: GZMA, GZMB, PRF1 UP; GZMK DOWN in LC (cytotoxic)
+  F. Monocytes: ALAS2, IFIT2, IFIT3, ISG15 UP in LC (inflammatory)
 
 ================================================================================

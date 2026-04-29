@@ -1,0 +1,5 @@
+sample	role	raw_n_barcodes_nonzero_GEX	raw_n_barcodes_nonzero_ADT	raw_GEX_total_UMI	raw_GEX_top1k_med_UMI	raw_GEX_top10k_med_UMI	raw_GEX_top1k_med_genes	raw_GEX_top10k_med_genes	raw_GEX_max_UMI	raw_GEX_p99_UMI	raw_GEX_p999_UMI	metric_GEX_reads_in_library	metric_GEX_valid_barcodes	metric_GEX_cells_called	metric_GEX_median_UMI_per_cell	metric_GEX_mean_reads_per_cell	metric_GEX_confident_mapped_in_cells
+1--104-M1	healthy reference	414704	702441	53666357	13101.5	4999.5	3713.5	1989.0	55373	5685.0	13851.267000000225	574,979,317	91.7%	7,211	6,099	66,987	95.5%
+19--228-M1	same donor, healthy timepoint	458347	707581	57285191	9836.5	4610.0	3185.0	1836.0	65765	4786.0	10145.57800000027	596,472,582	92.6%	10,442	4,519	45,910	88.6%
+20--228-M3	broken (suspected)	54919	5737	138907	12.0	6.0	11.0	6.0	44	11.0	19.0	533,195,467	82.2%	54,919	1	1,300	100.0%
+21--228-M6	broken (suspected)	23656	6525	57880	11.0	4.0	11.0	3.0	41	13.0	21.345000000001164	626,230,461	82.7%	7,873	5	1,453	80.9%

@@ -1,0 +1,33 @@
+=== Long COVID Article Analysis ===
+Cohort flag: --cohort=female
+Start: Fri Apr 24 08:51:04 PM EDT 2026
+WARNING: ignoring environment value of R_HOME
+[cohort] running with COHORT = female
+[1/6] Loading data...
+  cohort=female: 19 sample-timepoint rows, 8 unique subjects -> /users/hjiang/GenoDistance/long_covid/article/female_subset_samples.csv
+    1_month: n_LC=4, n_Recovered=4
+    6_month: n_LC=4, n_Recovered=4
+  Recomputing DE on female subset from pseudobulk expression (t-test, ~few minutes)...
+    DE recomputed for 1_month
+    DE recomputed for 6_month
+  311088 total tests | 0 FDR<0.05
+  After cohort filter: prop_all=190 rows | expr_all=2560 rows | all_de=311088 rows
+[2/6] Fig 1: Cell proportions...
+  Saved: 01_cell_proportions.png
+[3/6] Fig 2: ALAS2 / OR7D2 expression...
+  Saved: 02_ALAS2_OR7D2_expression.png
+[4/6] Fig 3 & 4: Tissue-homing + exhaustion expression...
+  Saved: 03_tissue_homing_CD4.png 
+  Saved: 04_exhaustion_cytotoxic_CD8.png 
+[5/6] Fig 5: logFC heatmap...
+null device 
+          1 
+  Saved: 05_lfc_heatmap_both_tiers.png
+[6/6] Fig 6: Volcano plots...
+  Saved: 06_volcano_key_celltypes.png
+Writing summary...
+
+=== Analysis complete ===
+Cohort: female
+Results: /users/hjiang/GenoDistance/long_covid/article/results_female/
+End:   Fri Apr 24 08:53:09 PM EDT 2026

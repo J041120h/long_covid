@@ -1,0 +1,23 @@
+Loading conda_R/4.4.x
+Warning message:
+There were 20 warnings in `summarise()`.
+The first warning was:
+ℹ In argument: `p_val = tryCatch(...)`.
+ℹ In group 1: `gene = ALAS2`, `cell_type = "B Cell"`, `timepoint = "1_month"`.
+Caused by warning in `wilcox.test.default()`:
+! cannot compute exact p-value with ties
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 19 remaining warnings. 
+Warning message:
+There were 8 warnings in `summarise()`.
+The first warning was:
+ℹ In argument: `p = tryCatch(...)`.
+ℹ In group 3: `gene = PDCD1`, `cell_type = "Naive CD8+ T Cell"`, `timepoint =
+  "1_month"`.
+Caused by warning in `wilcox.test.default()`:
+! cannot compute exact p-value with ties
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 7 remaining warnings. 
+Warning messages:
+1: Removed 306 rows containing missing values or values outside the scale range
+(`geom_point()`). 
+2: ggrepel: 26 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+3: ggrepel: 23 unlabeled data points (too many overlaps). Consider increasing max.overlaps 

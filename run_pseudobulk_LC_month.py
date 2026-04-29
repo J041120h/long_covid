@@ -23,12 +23,12 @@ Output directory structure (per resolution):
           1/  3/  6/
             {cluster}/
               ...
-        merged/            <- written by this script AND differential_gene_LC_month_step_1.R
+        merged/            <- written by this script (row-bound LC + Recovered)
           1/  3/  6/
             {cluster}/
               pseudobulk_expression.csv  (LC + Recovered row-bound)
               pseudobulk_metadata.csv
-            cell_type_proportions.csv    <- NEW: cell type proportions per sample
+            cell_type_proportions.csv    <- cell type proportions per sample
         step1/             <- combined LC+Recovered step1 output
         step2/             <- combined LC+Recovered step2 output
       leiden_1/
@@ -145,6 +145,102 @@ def compute_cell_type_proportions_with_metadata(adata, sample_col, celltype_col,
     result = result[meta_cols + celltype_cols]
     
     return result
+
+
+def merge_lc_recovered_pseudobulk(lc_dir, recovered_dir, merged_dir, verbose=True):
+    """
+    Row-bind LC and Recovered per-cluster pseudobulk CSVs into a merged tree.
+
+    Reads pseudobulk_expression.csv + pseudobulk_metadata.csv from
+        {lc_dir}/{month}/{cluster}/  and  {recovered_dir}/{month}/{cluster}/
+    and writes row-bound versions to
+        {merged_dir}/{month}/{cluster}/
+
+    Gene columns are intersected so the merged expression matrix is consistent.
+    If only one side exists, the single-side files are copied as-is.
+    """
+    exclude_dirs = {"step1", "step2", "merged"}
+
+    def _list_subdirs(d):
+        if not os.path.isdir(d):
+            return []
+        return [
+            name for name in os.listdir(d)
+            if os.path.isdir(os.path.join(d, name)) and name not in exclude_dirs
+        ]
+
+    lc_tps  = _list_subdirs(lc_dir)
+    rec_tps = _list_subdirs(recovered_dir)
+    timepoints = sorted(set(lc_tps) | set(rec_tps))
+
+    if not timepoints:
+        if verbose:
+            print(f"  [merge] No timepoint subdirectories found under "
+                  f"{lc_dir} or {recovered_dir}")
+        return
+
+    for tp in timepoints:
+        lc_cts  = _list_subdirs(os.path.join(lc_dir, tp))
+        rec_cts = _list_subdirs(os.path.join(recovered_dir, tp))
+        celltypes = sorted(set(lc_cts) | set(rec_cts))
+
+        for ct in celltypes:
+            lc_ef  = os.path.join(lc_dir,        tp, ct, "pseudobulk_expression.csv")
+            lc_mf  = os.path.join(lc_dir,        tp, ct, "pseudobulk_metadata.csv")
+            rec_ef = os.path.join(recovered_dir, tp, ct, "pseudobulk_expression.csv")
+            rec_mf = os.path.join(recovered_dir, tp, ct, "pseudobulk_metadata.csv")
+
+            has_lc  = os.path.exists(lc_ef)  and os.path.exists(lc_mf)
+            has_rec = os.path.exists(rec_ef) and os.path.exists(rec_mf)
+            if not has_lc and not has_rec:
+                continue
+
+            out_dir = os.path.join(merged_dir, tp, ct)
+            os.makedirs(out_dir, exist_ok=True)
+
+            if has_lc and has_rec:
+                expr_lc  = pd.read_csv(lc_ef)
+                expr_rec = pd.read_csv(rec_ef)
+                meta_lc  = pd.read_csv(lc_mf)
+                meta_rec = pd.read_csv(rec_mf)
+
+                id_col = expr_lc.columns[0]
+                common_genes = [
+                    g for g in expr_lc.columns[1:] if g in set(expr_rec.columns[1:])
+                ]
+
+                if len(common_genes) < 10:
+                    if verbose:
+                        print(f"  [WARN] Too few common genes for {tp}/{ct} "
+                              f"({len(common_genes)}) — skipping merge")
+                    continue
+
+                cols = [id_col] + common_genes
+                expr_merged = pd.concat([expr_lc[cols], expr_rec[cols]],
+                                        axis=0, ignore_index=True)
+                meta_merged = pd.concat([meta_lc, meta_rec],
+                                        axis=0, ignore_index=True, sort=False)
+
+                if verbose:
+                    print(f"  Merged {tp}/{ct}: "
+                          f"{len(expr_merged)} samples, "
+                          f"{len(common_genes)} genes")
+
+            elif has_lc:
+                expr_merged = pd.read_csv(lc_ef)
+                meta_merged = pd.read_csv(lc_mf)
+                if verbose:
+                    print(f"  LC-only {tp}/{ct}: {len(expr_merged)} samples")
+            else:
+                expr_merged = pd.read_csv(rec_ef)
+                meta_merged = pd.read_csv(rec_mf)
+                if verbose:
+                    print(f"  Recovered-only {tp}/{ct}: {len(expr_merged)} samples")
+
+            expr_merged.to_csv(os.path.join(out_dir, "pseudobulk_expression.csv"),
+                               index=False)
+            meta_merged.to_csv(os.path.join(out_dir, "pseudobulk_metadata.csv"),
+                               index=False)
 
 
 def save_merged_cell_type_proportions(adata, resolution, month, output_dir):
@@ -319,6 +415,22 @@ if __name__ == "__main__":
         )
 
     # -----------------------------------------------------------------------
+    # Merge LC + Recovered pseudobulk CSVs into the merged/ tree
+    # -----------------------------------------------------------------------
+    print("\n" + "=" * 60)
+    print("Building merged/ pseudobulk tree (LC + Recovered row-bound)...")
+    print("=" * 60)
+
+    for resolution in RESOLUTIONS:
+        print(f"\n--- Resolution: {resolution} ---")
+        merge_lc_recovered_pseudobulk(
+            lc_dir        = os.path.join(ROOT, resolution, "LC"),
+            recovered_dir = os.path.join(ROOT, resolution, "Recovered"),
+            merged_dir    = os.path.join(ROOT, resolution, "merged"),
+            verbose       = True,
+        )
+
+    # -----------------------------------------------------------------------
     # Generate merged cell type proportions for downstream analysis
     # -----------------------------------------------------------------------
     print("\n" + "=" * 60)
@@ -327,11 +439,11 @@ if __name__ == "__main__":
 
     for resolution in RESOLUTIONS:
         print(f"\n--- Resolution: {resolution} ---")
-        
+
         # Save global proportions (all months combined)
         merged_base_dir = os.path.join(ROOT, resolution, "merged")
         save_global_cell_type_proportions(adata, resolution, merged_base_dir)
-        
+
         # Save per-month proportions
         for month in MONTHS:
             merged_month_dir = os.path.join(ROOT, resolution, "merged", month)
@@ -342,7 +454,9 @@ if __name__ == "__main__":
     print(f"Root output: {ROOT}")
     print("=" * 60)
     print("\nGenerated files in merged folders:")
-    print("  - cell_type_proportions.csv (per month)")
+    print("  - {month}/{cluster}/pseudobulk_expression.csv (row-bound LC + Recovered)")
+    print("  - {month}/{cluster}/pseudobulk_metadata.csv")
+    print("  - {month}/cell_type_proportions.csv (per month)")
     print("  - cell_type_proportions_all.csv (all months)")
     print("  - cell_type_proportions_summary.csv (summary statistics)")
     print("=" * 60)

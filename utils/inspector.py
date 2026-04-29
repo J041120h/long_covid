@@ -63,7 +63,7 @@ def _print_sparsity_info(mat, label: str = ".X") -> None:
         print(f"  - ⚠️ Could not compute sparsity for {label}: {e}")
 
 
-def summarize_h5ad(h5ad_path: str, n_examples: int = 10, n_col_examples: int = 5):
+def summarize_h5ad(h5ad_path: str, n_examples: int = 10, n_col_examples: int = 20):
     """
     Summarize an AnnData .h5ad file by printing examples of cell names, obs, var,
     and inspecting .X (dtype, NaN/Inf, integer-like vs fractional, min/max, example values,
@@ -296,8 +296,7 @@ def summarize_h5ad(h5ad_path: str, n_examples: int = 10, n_col_examples: int = 5
     except Exception as e:
         print(f"❌ Error reading {h5ad_path}: {e}")
 
-
 if __name__ == "__main__":
     summarize_h5ad(
-        h5ad_path= "/dcs07/hongkai/data/harry/result/long_covid/analysis/preprocess/adata_sample.h5ad"
+        h5ad_path= "/dcs07/hongkai/data/jiatong/hvg_2000_res_0.8/lineage_B_cluster/processed_reintegrated_manual_annotated_clean_subclusterclean.h5ad"
     )

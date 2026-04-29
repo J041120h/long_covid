@@ -1,0 +1,116 @@
+===========================================================================
+LONG COVID scRNA-seq: COMPARISON WITH YIN ET AL. 2024
+Nature Immunology 25, 218-225 (2024)
+===========================================================================
+
+COHORT: FEMALE
+  [FEMALE-ONLY cohort | paper-aligned: paper used female-only bulk/scRNA-seq at 8mo postinfection]
+  Subset metadata file: /users/hjiang/GenoDistance/long_covid/article/female_subset_samples.csv
+  Subjects in cohort: 8
+    1_month: n_LC=4, n_Recovered=4
+    6_month: n_LC=4, n_Recovered=4
+  DE source: t-test on log pseudobulk expression (cohort-restricted, recomputed in-script)
+
+METHODOLOGICAL ALIGNMENT
+---------------------------------------------------------------------------
+TIER 1 — Directly comparable (paper used scRNA-seq mRNA, Extended Data Fig. 9):
+  Genes: ALAS2, OR7D2, CXCR4, CXCR5, CCR6, CCR4
+
+TIER 2 — Weak proxy only (paper used CyTOF PROTEIN on antigen-specific T cells):
+  CD4+ T panel: CXCR4, CXCR5, CCR4, CCR6, ITGB1, CD40LG (paper Fig. 2)
+  CD8+ T panel: PDCD1, CTLA4, TIGIT, HAVCR2, LAG3, GZMA, GZMB, GZMK, PRF1 (paper Fig. 3)
+  NOTE: mRNA does not equal protein; our cells are not antigen-selected.
+
+OVERALL DE RESULTS
+---------------------------------------------------------------------------
+  Total tests: 311088
+  FDR < 0.05:  0 genes
+
+TIER 1: ALAS2 AND OR7D2 (paper's primary scRNA-seq hits)
+---------------------------------------------------------------------------
+  ALAS2  | B Cell                    | 1_month | logFC=-1.273 | FDR=0.997 | DOWN in LC
+  ALAS2  | CD14+ Monocyte            | 1_month | logFC=-0.555 | FDR=0.957 | DOWN in LC
+  ALAS2  | CD16+ Monocyte            | 1_month | logFC=+0.092 | FDR=0.868 | UP in LC
+  ALAS2  | CD8+ T Cell               | 1_month | logFC=-0.878 | FDR=0.990 | DOWN in LC
+  ALAS2  | cDC2                      | 1_month | logFC=-0.575 | FDR=0.880 | DOWN in LC
+  ALAS2  | Lymphocyte                | 1_month | logFC=-1.721 | FDR=0.948 | DOWN in LC
+  ALAS2  | Memory CD4+ T Cell        | 1_month | logFC=-0.100 | FDR=0.961 | DOWN in LC
+  ALAS2  | Naive CD4+ T Cell         | 1_month | logFC=-1.020 | FDR=0.988 | DOWN in LC
+  ALAS2  | Naive CD8+ T Cell         | 1_month | logFC=+0.179 | FDR=0.961 | UP in LC
+  ALAS2  | NK Cell                   | 1_month | logFC=-0.210 | FDR=0.958 | DOWN in LC
+  ALAS2  | B Cell                    | 6_month | logFC=-0.851 | FDR=1.000 | DOWN in LC
+  ALAS2  | CD14+ Monocyte            | 6_month | logFC=-0.301 | FDR=0.999 | DOWN in LC
+  ALAS2  | CD16+ Monocyte            | 6_month | logFC=-0.154 | FDR=0.998 | DOWN in LC
+  ALAS2  | CD8+ T Cell               | 6_month | logFC=-0.933 | FDR=1.000 | DOWN in LC
+  ALAS2  | cDC2                      | 6_month | logFC=-0.243 | FDR=1.000 | DOWN in LC
+  ALAS2  | Lymphocyte                | 6_month | logFC=-0.571 | FDR=1.000 | DOWN in LC
+  ALAS2  | Memory CD4+ T Cell        | 6_month | logFC=-0.323 | FDR=1.000 | DOWN in LC
+  ALAS2  | Naive CD4+ T Cell         | 6_month | logFC=-1.935 | FDR=0.997 | DOWN in LC
+  ALAS2  | Naive CD8+ T Cell         | 6_month | logFC=-0.177 | FDR=0.999 | DOWN in LC
+  ALAS2  | NK Cell                   | 6_month | logFC=-0.726 | FDR=0.997 | DOWN in LC
+
+  Summary: 2 cell-type tests UP in LC, 18 DOWN in LC
+  Paper found: ALAS2 UP in LC (bulk scRNA-seq)
+
+CELL TYPE PROPORTIONS (directly comparable to paper Extended Data Fig. 1)
+---------------------------------------------------------------------------
+
+1_month:
+  ↓ CD16+ Monocyte               LC=0.0105 Rec=0.0249 p=0.057 .
+  ↓ CD8+ T Cell                  LC=0.103  Rec=0.1374 p=0.486
+  ↓ Memory CD4+ T Cell           LC=0.1511 Rec=0.1735 p=0.486
+  ↑ Lymphocyte                   LC=0.2807 Rec=0.2256 p=0.686
+  ↓ NK Cell                      LC=0.0741 Rec=0.0885 p=0.686
+  ↑ Naive CD8+ T Cell            LC=0.0646 Rec=0.0591 p=0.686
+  ↓ cDC2                         LC=0.0077 Rec=0.0096 p=0.686
+  ↓ CD14+ Monocyte               LC=0.1384 Rec=0.1391 p=0.886
+  ↓ Naive CD4+ T Cell            LC=0.0405 Rec=0.0492 p=0.886
+  ↑ B Cell                       LC=0.1295 Rec=0.0931 p=1.000
+
+6_month:
+  ↑ CD14+ Monocyte               LC=0.2327 Rec=0.1248 p=0.029 *
+  ↓ Naive CD8+ T Cell            LC=0.0453 Rec=0.0655 p=0.200
+  ↓ Memory CD4+ T Cell           LC=0.1327 Rec=0.1735 p=0.343
+  ↑ cDC2                         LC=0.0103 Rec=0.007  p=0.343
+  ↓ Lymphocyte                   LC=0.1939 Rec=0.262  p=0.486
+  ↑ NK Cell                      LC=0.0893 Rec=0.0732 p=0.486
+  ↑ B Cell                       LC=0.1111 Rec=0.1054 p=0.686
+  ↑ CD16+ Monocyte               LC=0.0187 Rec=0.0186 p=1.000
+  ↑ CD8+ T Cell                  LC=0.1286 Rec=0.1284 p=1.000
+  ↓ Naive CD4+ T Cell            LC=0.0375 Rec=0.0416 p=1.000
+
+TIER 2: CyTOF PROTEIN PROXIES (logFC direction only — weak evidence)
+---------------------------------------------------------------------------
+Paper Fig. 2 CD4+ genes (CXCR4/CXCR5/CCR4/CCR6 — tested as mRNA in Memory CD4+ T):
+  CCR4       mean logFC = +0.235  UP in LC (consistent)
+  CCR6       mean logFC = -0.433  DOWN in LC (inconsistent)
+  CD40LG     mean logFC = +0.167  UP in LC (consistent)
+  CXCR4      mean logFC = -0.040  DOWN in LC (inconsistent)
+  CXCR5      mean logFC = -0.272  DOWN in LC (inconsistent)
+  ITGB1      mean logFC = -0.048  DOWN in LC (inconsistent)
+
+Paper Fig. 3 CD8+ genes (exhaustion/cytotoxic — tested as mRNA in CD8+ T cells):
+  CTLA4      mean logFC = -0.035  (inconsistent)  paper expected: UP
+  GZMA       mean logFC = -0.363  (inconsistent)  paper expected: UP
+  GZMB       mean logFC = +0.135  (consistent)  paper expected: UP
+  GZMK       mean logFC = -1.149  (consistent)  paper expected: DOWN
+  HAVCR2     mean logFC = +0.065  (consistent)  paper expected: UP
+  LAG3       mean logFC = -0.452  (inconsistent)  paper expected: UP
+  PDCD1      mean logFC = -0.247  (inconsistent)  paper expected: UP
+  PRF1       mean logFC = +0.102  (consistent)  paper expected: UP
+  TIGIT      mean logFC = -0.078  (inconsistent)  paper expected: UP
+
+OUTPUT FILES
+---------------------------------------------------------------------------
+figures/01_cell_proportions.png         -- Cell proportion boxplots + p-values
+figures/02_ALAS2_OR7D2_expression.png   -- Paper's primary scRNA-seq DE genes
+figures/03_tissue_homing_CD4.png        -- Homing receptor mRNA in CD4+ T
+figures/04_exhaustion_cytotoxic_CD8.png -- Exhaustion/cytotoxic mRNA in CD8+ T
+figures/05_lfc_heatmap_both_tiers.png   -- logFC heatmap (tiers colour-coded)
+figures/06_volcano_key_celltypes.png    -- Volcano for 3 key cell types
+tables/all_DE_results.csv
+tables/scrna_comparable_genes_DE.csv    -- Tier 1 genes only
+tables/cytof_proxy_genes_DE.csv         -- Tier 2 genes only
+tables/proportion_summary.csv
+tables/significant_genes.csv
+===========================================================================

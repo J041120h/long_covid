@@ -1,0 +1,43 @@
+sample_meta: (37, 10), cols: ['sample', 'filename_sample_id', 'month', 'OutSMART short number', 'OutSMART ID', 'Sex', 'LC/Recovered', 'BMI category', 'Age at enrollment', 'age_cluster']
+
+========== T: /dcs07/hongkai/data/harry/result/long_covid/subset/T_clean_subclusterclean.h5ad ==========
+obs shape: (155293, 19)
+obs columns before: ['sample', 'barcode_orig', 'sample_barcode', 'cell_key', 'n_genes_by_counts', 'total_counts', 'total_counts_mt', 'pct_counts_mt', 'total_counts_ribo', 'pct_counts_ribo', 'leiden', 'timepoint', 'time_month', 'cell_type', 'celltypist_conf_score', 'patient', 'leiden_sub', 'manual_cell_type', 'manual_cell_type_display']
+unique obs['sample']: 35 (e.g. ['1--104-M1', '10--129-M1', '11--129-M6'])
+unique join keys    : 35 (e.g. ['101-M1', '101-M3', '101-M6'])
+INFO: 2 samples in sample_meta not in lineage: ['228-M3', '228-M6']
+
+Rows with no metadata match: 0 / 155293
+obs columns after:  ['sample', 'barcode_orig', 'sample_barcode', 'cell_key', 'n_genes_by_counts', 'total_counts', 'total_counts_mt', 'pct_counts_mt', 'total_counts_ribo', 'pct_counts_ribo', 'leiden', 'timepoint', 'time_month', 'cell_type', 'celltypist_conf_score', 'patient', 'leiden_sub', 'manual_cell_type', 'manual_cell_type_display', 'filename_sample_id', 'month', 'OutSMART short number', 'OutSMART ID', 'Sex', 'LC/Recovered', 'BMI category', 'Age at enrollment', 'age_cluster']
+
+Sanity check (first 3 rows of obs, new columns only):
+                              filename_sample_id  month  OutSMART short number     OutSMART ID   Sex LC/Recovered BMI category  Age at enrollment age_cluster
+sample_barcode                                                                                                                                               
+1--104-M1_AAACCTGAGAAACCAT-1                 104      1                    104  OS-AB-1-104-01  Male    Recovered     Elevated                 74         Old
+1--104-M1_AAACCTGAGAAGGTGA-1                 104      1                    104  OS-AB-1-104-01  Male    Recovered     Elevated                 74         Old
+1--104-M1_AAACCTGAGCATCATC-1                 104      1                    104  OS-AB-1-104-01  Male    Recovered     Elevated                 74         Old
+
+Writing /obs back into /dcs07/hongkai/data/harry/result/long_covid/subset/T_clean_subclusterclean.h5ad ...
+Done.
+
+========== B: /dcs07/hongkai/data/harry/result/long_covid/subset/B_clean_subclusterclean.h5ad ==========
+obs shape: (25492, 19)
+obs columns before: ['sample', 'barcode_orig', 'sample_barcode', 'cell_key', 'n_genes_by_counts', 'total_counts', 'total_counts_mt', 'pct_counts_mt', 'total_counts_ribo', 'pct_counts_ribo', 'leiden', 'timepoint', 'time_month', 'cell_type', 'celltypist_conf_score', 'patient', 'leiden_sub', 'manual_cell_type', 'manual_cell_type_display']
+unique obs['sample']: 35 (e.g. ['1--104-M1', '10--129-M1', '11--129-M6'])
+unique join keys    : 35 (e.g. ['101-M1', '101-M3', '101-M6'])
+INFO: 2 samples in sample_meta not in lineage: ['228-M3', '228-M6']
+
+Rows with no metadata match: 0 / 25492
+obs columns after:  ['sample', 'barcode_orig', 'sample_barcode', 'cell_key', 'n_genes_by_counts', 'total_counts', 'total_counts_mt', 'pct_counts_mt', 'total_counts_ribo', 'pct_counts_ribo', 'leiden', 'timepoint', 'time_month', 'cell_type', 'celltypist_conf_score', 'patient', 'leiden_sub', 'manual_cell_type', 'manual_cell_type_display', 'filename_sample_id', 'month', 'OutSMART short number', 'OutSMART ID', 'Sex', 'LC/Recovered', 'BMI category', 'Age at enrollment', 'age_cluster']
+
+Sanity check (first 3 rows of obs, new columns only):
+                              filename_sample_id  month  OutSMART short number     OutSMART ID   Sex LC/Recovered BMI category  Age at enrollment age_cluster
+sample_barcode                                                                                                                                               
+1--104-M1_AAAGATGAGTTGAGAT-1                 104      1                    104  OS-AB-1-104-01  Male    Recovered     Elevated                 74         Old
+1--104-M1_AAAGATGCAATCGGTT-1                 104      1                    104  OS-AB-1-104-01  Male    Recovered     Elevated                 74         Old
+1--104-M1_AAAGCAACACATGTGT-1                 104      1                    104  OS-AB-1-104-01  Male    Recovered     Elevated                 74         Old
+
+Writing /obs back into /dcs07/hongkai/data/harry/result/long_covid/subset/B_clean_subclusterclean.h5ad ...
+Done.
+
+DONE.

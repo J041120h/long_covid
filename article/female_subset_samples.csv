@@ -1,0 +1,20 @@
+sample,source_file,filename_sample_id,month,OutSMART short number,OutSMART ID,Sex,LC/Recovered,BMI category,Age at enrollment,age_cluster,_combined_batch_
+110-M1,6--110-M1_sample_filtered_feature_bc_matrix.h5,110,1,110,OS-AB-1-110-01,Female,LC,Normal,41,Young,Female|Normal
+110-M6,7--110-M6_sample_filtered_feature_bc_matrix.h5,110,6,110,OS-AB-1-110-01,Female,LC,Normal,41,Young,Female|Normal
+127-M1,8--127-M1_sample_filtered_feature_bc_matrix.h5,127,1,127,OS-AB-1-127-01,Female,LC,Elevated,33,Young,Female|Elevated
+127-M6,9--127-M6_sample_filtered_feature_bc_matrix.h5,127,6,127,OS-AB-1-127-01,Female,LC,Elevated,33,Young,Female|Elevated
+129-M1,10--129-M1_sample_filtered_feature_bc_matrix.h5,129,1,129,OS-AB-1-129-01,Female,Recovered,Elevated,27,Young,Female|Elevated
+129-M6,11--129-M6_sample_filtered_feature_bc_matrix.h5,129,6,129,OS-AB-1-129-01,Female,Recovered,Elevated,27,Young,Female|Elevated
+144-M1,14--144-M1_sample_filtered_feature_bc_matrix.h5,144,1,144,OS-AB-1-144-01,Female,Recovered,Elevated,43,Young,Female|Elevated
+144-M3,15--144-M3_sample_filtered_feature_bc_matrix.h5,144,3,144,OS-AB-1-144-01,Female,Recovered,Elevated,43,Young,Female|Elevated
+144-M6,16--144-M6_sample_filtered_feature_bc_matrix.h5,144,6,144,OS-AB-1-144-01,Female,Recovered,Elevated,43,Young,Female|Elevated
+147-M1,27--147-M1_sample_filtered_feature_bc_matrix.h5,147,1,147,OS-AB-1-147-01,Female,LC,Elevated,59,Middle,Female|Elevated
+147-M6,28--147-M6_sample_filtered_feature_bc_matrix.h5,147,6,147,OS-AB-1-147-01,Female,LC,Elevated,59,Middle,Female|Elevated
+151-M1,17--151-M1_sample_filtered_feature_bc_matrix.h5,151,1,151,OS-AB-1-151-01,Female,Recovered,Normal,54,Middle,Female|Normal
+151-M6,18--151-M6_sample_filtered_feature_bc_matrix.h5,151,6,151,OS-AB-1-151-01,Female,Recovered,Normal,54,Middle,Female|Normal
+173-M1,32--173-M1_sample_filtered_feature_bc_matrix.h5,173,1,173,OS-AB-1-173-01,Female,Recovered,Normal,51,Middle,Female|Normal
+173-M3,33--173-M3_sample_filtered_feature_bc_matrix.h5,173,3,173,OS-AB-1-173-01,Female,Recovered,Normal,51,Middle,Female|Normal
+173-M6,34--173-M6_sample_filtered_feature_bc_matrix.h5,173,6,173,OS-AB-1-173-01,Female,Recovered,Normal,51,Middle,Female|Normal
+185-M1,35--185-M1_sample_filtered_feature_bc_matrix.h5,185,1,185,OS-AB-1-185-01,Female,LC,Normal,62,Old,Female|Normal
+185-M3,36--185-M3_sample_filtered_feature_bc_matrix.h5,185,3,185,OS-AB-1-185-01,Female,LC,Normal,62,Old,Female|Normal
+185-M6,37--185-M6_sample_filtered_feature_bc_matrix.h5,185,6,185,OS-AB-1-185-01,Female,LC,Normal,62,Old,Female|Normal
